@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { RepositoriesModule } from './modules/repositories/repositories.module';
 import { GithubModule } from './modules/github/github.module';
+import { HealthModule } from './modules/health/health.module';
 import configuration from './config';
 
 @Module({
@@ -15,6 +16,7 @@ import configuration from './config';
     UsersModule,
     RepositoriesModule,
     GithubModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],

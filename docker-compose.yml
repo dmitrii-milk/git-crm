@@ -1,0 +1,83 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: git-crm-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5436/git-crm?schema=public
+      - PORT=3001
+      - NODE_ENV=production
+      - GITHUB_API_URL=https://api.github.com
+      - JWT_SECRET=secret
+      - JWT_ALG=HS256
+      - JWT_SESSION_DURATION=3600
+      - HASH_SALT_LENGTH=16
+      - HASH_KEY_LENGTH=32
+    networks:
+      - git-crm-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001 || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: build # Use 'build' for production build or 'development' for hot reloading
+    container_name: git-crm-client
+    restart: unless-stopped
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://api:3001/api/v1
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - git-crm-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: git-crm-postgres
+    restart: unless-stopped
+    ports:
+      - "5436:5436"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=git-crm
+      - POSTGRES_HOST=postgres
+      - PGPORT=5436
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d git-crm -p 5436"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - git-crm-network
+
+networks:
+  git-crm-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

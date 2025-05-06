@@ -13,18 +13,18 @@ export const SearchInput = () => {
   const { data: searchResult, error, isLoading } = useSearch(searchDebounce);
   const { trigger: createOne } = useCreateRepository();
 
-  const onInputChange = (_, value: string) => {
+  const onInputChange = (_: React.SyntheticEvent, value: string) => {
     setSearch(value);
   };
 
   const handleOnChange = (
     _: React.SyntheticEvent,
-    value: {
-      value: number;
-      label: string;
-    }
+    option: unknown,
   ) => {
-    const repoData = (searchResult?.items || []).find((item) => item.githubId === value.value);
+    const { value } = option as {
+      value: number;
+    };
+    const repoData = (searchResult?.items || []).find((item) => item.githubId === value);
 
     const payload = {
       ...repoData,

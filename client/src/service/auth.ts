@@ -86,9 +86,15 @@ export async function registrationAction({ request }: LoaderFunctionArgs) {
   try {
     await authService.signup(email, password);
   } catch (error) {
-    const errorMessages = error?.['message'] || 'Failed to signup';
+    if (error instanceof Error) {
+      const errorMessages = error.message || 'Failed to signup';
+      return {
+        error: errorMessages,
+      };
+    }
+
     return {
-      error: errorMessages,
+      error: 'Failed to signup',
     };
   }
 
@@ -111,10 +117,15 @@ export async function loginAction({ request }: LoaderFunctionArgs) {
   try {
     await authService.signin(email, password);
   } catch (error) {
-    const errorMessages = error?.['message'] || 'Failed to signin';
+    if (error instanceof Error) {
+      const errorMessages = error.message || 'Failed to signin';
+      return {
+        error: errorMessages,
+      };
+    }
 
     return {
-      error: errorMessages,
+      error: 'Failed to signin',
     };
   }
 
