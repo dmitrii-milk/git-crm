@@ -1,0 +1,23 @@
+# Version control
+.git
+.gitignore
+.gitlab-ci.yml
+
+# Node.js
+node_modules
+
+# Build output
+dist
+
+# Development files
+*.log
+*.md
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Environment and config files
+.env*
+.eslintrc.js
+.prettierrc

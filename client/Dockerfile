@@ -1,49 +1,33 @@
-# Stage 1: Base image
-FROM node:18-alpine AS base
+# Step 1: Build the React app with Vite
+FROM node:18-alpine AS builder
+
 WORKDIR /app
+
+# Copy package.json and lock file first
 COPY package*.json ./
 
-# Stage 2: Development
-FROM base AS development
+# Install dependencies
 RUN npm install
-COPY . .
-CMD ["npm", "run", "dev"]
 
-# Stage 3: Build the application
-FROM base AS build
-
-# Install dependencies needed for building on Alpine
-RUN apk add --no-cache python3 make g++ curl
-
-# Print environment information for debugging
-RUN echo "Node version: $(node -v)" && \
-    echo "NPM version: $(npm -v)" && \
-    echo "Architecture: $(uname -m)" && \
-    echo "OS: $(cat /etc/os-release | grep PRETTY_NAME)"
-
-# Install all dependencies including devDependencies with verbose logging
-RUN npm install --verbose
-
-# Copy application files
+# Copy the rest of the application code
 COPY . .
 
-# List project structure for debugging
-RUN ls -la
+ENV VITE_API_URL=http://localhost:3001/api/v1
 
-# Add extra environment variables for debugging and native module compatibility
-ENV VITE_DISABLE_NATIVE_MODULE=true
-ENV DEBUG=vite:*
-ENV NODE_ENV=production
-ENV npm_config_loglevel=verbose
+# Build the app (Vite output goes to dist/)
+RUN npm run build
 
-# Build the application with verbose logging
-RUN echo "Starting build process..." && \
-    NODE_OPTIONS="--max-old-space-size=8192" npm run build --verbose
+# Step 2: Serve with NGINX
+FROM nginx:stable-alpine
 
-# Stage 4: Serve the application with nginx
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom NGINX config (defined below)
+COPY nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 80
+# Copy built app from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 3002
+EXPOSE 3002
+
+# Start NGINX
 CMD ["nginx", "-g", "daemon off;"]

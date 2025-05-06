@@ -46,16 +46,20 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy entrypoint.sh
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+
 # Create a non-root user and switch to it
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001 -G nodejs
 
 # Ownership to nestjs user
 RUN chown -R nestjs:nodejs /app
+RUN chmod +x /app/entrypoint.sh
+
 USER nestjs
 
 # Expose application port
 EXPOSE 3001
 
-# Run the application
-CMD ["node", "dist/main.js"]
+CMD ["/app/entrypoint.sh"]

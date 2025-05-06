@@ -34,17 +34,16 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-      target: build # Use 'build' for production build or 'development' for hot reloading
     container_name: git-crm-client
     restart: unless-stopped
     volumes:
       - ./client:/app
       - /app/node_modules
     ports:
-      - "80:80"
+      - "3002:3002"
     environment:
-      - NODE_ENV=production
       - VITE_API_URL=http://api:3001/api/v1
+      - NODE_ENV=production
     depends_on:
       api:
         condition: service_healthy
